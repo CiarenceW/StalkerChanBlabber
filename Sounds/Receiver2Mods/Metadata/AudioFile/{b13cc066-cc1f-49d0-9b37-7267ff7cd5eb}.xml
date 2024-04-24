@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objects serializationModel="Studio.02.00.00">
+	<object class="AudioFile" id="{b13cc066-cc1f-49d0-9b37-7267ff7cd5eb}">
+		<property name="assetPath">
+			<value>4_Found_You.wav</value>
+		</property>
+		<property name="frequencyInKHz">
+			<value>44.0999985</value>
+		</property>
+		<property name="channelCount">
+			<value>2</value>
+		</property>
+		<property name="length">
+			<value>2.4380952380952383</value>
+		</property>
+		<relationship name="masterAssetFolder">
+			<destination>{9e12a249-a368-4cea-a70a-1729a2666683}</destination>
+		</relationship>
+	</object>
+</objects>

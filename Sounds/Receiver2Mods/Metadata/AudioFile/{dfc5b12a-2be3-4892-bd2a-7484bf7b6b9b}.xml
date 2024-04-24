@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objects serializationModel="Studio.02.00.00">
+	<object class="AudioFile" id="{dfc5b12a-2be3-4892-bd2a-7484bf7b6b9b}">
+		<property name="assetPath">
+			<value>8_You_got_your_treat_now_its_time_for_the_trick.wav</value>
+		</property>
+		<property name="frequencyInKHz">
+			<value>44.0999985</value>
+		</property>
+		<property name="channelCount">
+			<value>2</value>
+		</property>
+		<property name="length">
+			<value>6.4321995464852604</value>
+		</property>
+		<relationship name="masterAssetFolder">
+			<destination>{9e12a249-a368-4cea-a70a-1729a2666683}</destination>
+		</relationship>
+	</object>
+</objects>

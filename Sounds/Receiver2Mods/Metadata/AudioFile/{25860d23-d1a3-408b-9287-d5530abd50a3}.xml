@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objects serializationModel="Studio.02.00.00">
+	<object class="AudioFile" id="{25860d23-d1a3-408b-9287-d5530abd50a3}">
+		<property name="assetPath">
+			<value>6_Hope_youre_ready.wav</value>
+		</property>
+		<property name="frequencyInKHz">
+			<value>44.0999985</value>
+		</property>
+		<property name="channelCount">
+			<value>2</value>
+		</property>
+		<property name="length">
+			<value>4.017052154195011</value>
+		</property>
+		<relationship name="masterAssetFolder">
+			<destination>{9e12a249-a368-4cea-a70a-1729a2666683}</destination>
+		</relationship>
+	</object>
+</objects>
