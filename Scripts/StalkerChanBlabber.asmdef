@@ -12,7 +12,8 @@
         "Wolfire.Receiver2.dll",
         "FMODDef.dll",
         "BepInEx.dll",
-        "Wolfire.dll"
+        "Wolfire.dll",
+        "ImGui.dll"
     ],
     "autoReferenced": true,
     "defineConstraints": [],

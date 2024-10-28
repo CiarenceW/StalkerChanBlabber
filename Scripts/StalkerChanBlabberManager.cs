@@ -1,8 +1,13 @@
 ﻿using BepInEx;
+using FMOD.Studio;
+using FMOD;
+using FMODUnity;
+using ImGuiNET;
 using Receiver2;
 using Receiver2ModdingKit.CustomSounds;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -13,6 +18,10 @@ namespace StalkerChanBlabber
 	public class StalkerChanBlabberManager : MonoBehaviour
 	{
 		private const string kStalkerChanEvent = "event:/StalkerChan/";
+
+		private static bool debugWindowVisible;
+
+		internal static float volumeMultiplier = 0.4f;
 
 		public Dictionary<BlabberState, List<StalkerChanVoiceline>> voiceLineDictionnary = new Dictionary<BlabberState, List<StalkerChanVoiceline>>
 		{
@@ -93,6 +102,27 @@ namespace StalkerChanBlabber
 			Instance = this;
 		}
 
+		public void Update()
+		{
+			if (debugWindowVisible)
+			{
+				ImGui.SetNextWindowSize(new Vector2(440f, 550f), ImGuiCond.FirstUseEver);
+				if (ImGui.Begin("StalkerChanBlabber", ref debugWindowVisible))
+				{
+					ImGui.SliderFloat("Audio Boost", ref volumeMultiplier, 0.01f, 100f);
+				}
+				ImGui.End();
+			}
+		}
+
+		public static void OpenAudioDebug()
+		{
+			if (ImGui.MenuItem("StalkerChanBlabber Audio Debug", "", debugWindowVisible))
+			{
+				debugWindowVisible = !debugWindowVisible;
+			}
+		}
+
 		public void PlayBlabber(BlabberState blabberState)
 		{
 			StalkerChanVoiceline selectedVoiceline = voiceLineDictionnary[blabberState].Where( voiceline => !voiceline.playedLast ).ToList().GetRandom();
@@ -104,7 +134,7 @@ namespace StalkerChanBlabber
 
 			selectedVoiceline.playedLast = true;
 
-			ModAudioManager.PlayOneShotAttached(selectedVoiceline.eventName, LocalAimHandler.player_instance.gameObject);
+			ModAudioManager.PlayOneShotAttached(selectedVoiceline.eventName, LocalAimHandler.player_instance.gameObject, 1 * volumeMultiplier);
 		}
 
 		public void PlayEasterEggBlabber()
@@ -127,7 +157,7 @@ namespace StalkerChanBlabber
 					var sneakBotStatue = statues.Find("SneakBotStatue");
 					if (sneakBotStatue)
 					{
-						ModAudioManager.PlayOneShotAttached(selectedVoiceline.eventName, sneakBotStatue.gameObject);
+						ModAudioManager.PlayOneShotAttached(selectedVoiceline.eventName, sneakBotStatue.gameObject, 1 * volumeMultiplier);
 					}
 				}
 			} 

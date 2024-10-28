@@ -16,19 +16,32 @@ using UnityEngine.Events;
 using Wolfire;
 using System.IO;
 using Receiver2ModdingKit.CustomSounds;
+using ImGuiNET;
+using BepInEx.Configuration;
 
 namespace StalkerChanBlabber
 {
-	[BepInPlugin("TCCrew.StalkerChanBlabber", "StalkerChanBlabber", "0.0.1")]
+	[BepInPlugin("TCCrew.StalkerChanBlabber", "StalkerChanBlabber", "1.0.0")]
 	public class StalkerChanBlabberLoader : BaseUnityPlugin
 	{
+		internal static ConfigEntry<float> stalkerChanVolumeMultiplier;
+
 		public void Awake()
 		{
+			stalkerChanVolumeMultiplier = Config.Bind("StalkerChanBlabber", "VolumePercentage", 0.4f, new ConfigDescription("Volume multiplier for Stalker-Chan. Note that this is the same option as the one in the settings menu", new AcceptableValueRange<float>(0, 1)));
+
+			StalkerChanBlabberManager.volumeMultiplier = stalkerChanVolumeMultiplier.Value;
+
+			stalkerChanVolumeMultiplier.SettingChanged += ((s, e) => StalkerChanBlabberManager.volumeMultiplier = ((ConfigEntry<float>)s).Value);
+
 			var attribute = (BepInPlugin)Attribute.GetCustomAttribute(this.GetType(), typeof(BepInPlugin));
 
 			Logger.LogInfo($"Plugin { attribute.Name } version { attribute.Version } is loaded!");
 
-			gameObject.AddComponent<StalkerChanBlabberManager>();
+			if (!gameObject.GetComponent<StalkerChanBlabberManager>())
+			{
+				gameObject.AddComponent<StalkerChanBlabberManager>();
+			}
 
 			var directoryPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
 
@@ -54,9 +67,24 @@ namespace StalkerChanBlabber
 				Receiver2ModdingKit.CustomSounds.Utility.IsError(stalkerChanBlabberStrings.loadSampleData(), "BlabberStrings is fucked");
 			}
 
+			Receiver2ModdingKit.ModdingKitEvents.AddTaskAtCoreStartup(CreateSettings);
+
 			ReceiverEvents.StartListening(ReceiverEventTypeVoid.PlayerInitialized, PlayerInitialized);
 
 			Harmony.CreateAndPatchAll(this.GetType());
+		}
+
+		private void CreateSettings()
+		{
+			var stalkerChanVolumeSettingEntry = Receiver2ModdingKit.SettingsMenuManager.CreateSettingsMenuOption<float>("Stalker-Chan Volume Multiplier", stalkerChanVolumeMultiplier, 8);
+
+			var volumeSliderComponent = stalkerChanVolumeSettingEntry.control.GetComponent<SliderComponent>();
+
+			volumeSliderComponent.OnChange.AddListener((value) => stalkerChanVolumeMultiplier.Value = value);
+
+			volumeSliderComponent.format = "P0";
+
+			volumeSliderComponent.Value = stalkerChanVolumeMultiplier.Value;
 		}
 
 		private void PlayerInitialized(ReceiverEventTypeVoid ev)
@@ -89,6 +117,35 @@ namespace StalkerChanBlabber
 					}
 				}
 			}
+		}
+
+		[HarmonyPatch(typeof(MenuManagerScript), "UpdateDeveloperMenu")]
+		[HarmonyTranspiler]
+		private static IEnumerable<CodeInstruction> AddAudioDebug(IEnumerable<CodeInstruction> instructions, ILGenerator generator, MethodBase __originalMethod)
+		{
+			CodeMatcher codeMatcher = new CodeMatcher(instructions, generator)
+				.MatchForward(false,
+				new CodeMatch(OpCodes.Ldstr, "Debug Text Window"),
+				new CodeMatch(OpCodes.Ldstr, ""),
+				new CodeMatch(OpCodes.Ldsfld, AccessTools.Field(typeof(ConfigFiles), nameof(ConfigFiles.global))),
+				new CodeMatch(OpCodes.Ldfld, AccessTools.Field(typeof(ConfigFiles.Global), nameof(ConfigFiles.Global.display_debug_text_window))),
+				new CodeMatch(OpCodes.Call, AccessTools.Method(typeof(ImGui), nameof(ImGui.MenuItem), new Type[] { typeof(string), typeof(string), typeof(bool) })),
+				new CodeMatch(OpCodes.Brfalse)
+				);
+
+			if (!codeMatcher.ReportFailure(__originalMethod, Debug.LogError))
+			{
+				var labels = codeMatcher.Instruction.ExtractLabels();
+
+				codeMatcher.Insert(new CodeInstruction[]
+				{
+					new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(StalkerChanBlabberManager), nameof(StalkerChanBlabberManager.OpenAudioDebug)))
+				});
+
+				codeMatcher.Labels.AddRange(labels);
+			}
+
+			return codeMatcher.InstructionEnumeration();
 		}
 
 		[HarmonyPatch(typeof(SneakBotTape), nameof(SneakBotTape.StartEvent))]
@@ -219,6 +276,30 @@ namespace StalkerChanBlabber
 			Debug.Log("death");
 
 			StalkerChanBlabberManager.Instance.PlayBlabber(BlabberState.Death);
+		}
+	}
+
+	public static class Extensions
+	{
+		public static List<CodeInstruction> ToCodeInstructionsClipLast(this System.Reflection.MethodInfo methodInfo, out List<Label> extractedLabels, Dictionary<CodeInstruction, CodeInstruction> replaceInstructionWith = null)
+		{
+			var methodIL = PatchProcessor.GetOriginalInstructions(methodInfo);
+
+			if (replaceInstructionWith != null)
+			{
+				for (int instructionIndex = 0; instructionIndex < methodIL.Count; instructionIndex++)
+				{
+					if (replaceInstructionWith.TryGetValue(methodIL[instructionIndex], out var replacementInstrution))
+					{
+						methodIL[instructionIndex] = replacementInstrution;
+					}
+				}
+			}
+
+			extractedLabels = (methodIL.Last().ExtractLabels());
+			methodIL.Remove(methodIL.Last());
+
+			return methodIL;
 		}
 	}
 }

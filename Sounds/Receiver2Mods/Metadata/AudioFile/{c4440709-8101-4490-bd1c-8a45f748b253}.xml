@@ -4,9 +4,6 @@
 		<property name="assetPath">
 			<value>22_3_normal_death_noises.wav</value>
 		</property>
-		<property name="isStreaming">
-			<value>true</value>
-		</property>
 		<property name="frequencyInKHz">
 			<value>44.0999985</value>
 		</property>
